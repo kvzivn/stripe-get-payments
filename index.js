@@ -1,6 +1,6 @@
 import Stripe from "stripe"
 
-export default async ({ res, error }) => {
+export default async ({ res, log, error }) => {
   const stripe = new Stripe(process.env.STRIPE_API_KEY)
 
   async function fetchPaymentLinks(pageParam = {}) {
