@@ -38,6 +38,7 @@ export default async ({ res, error }) => {
       log(lineItems)
       return lineItems.data
     } catch (err) {
+      error(err.message)
       throw new Error(
         `Error fetching line items for payment link ${paymentLinkId}: ${err.message}`
       )
@@ -63,10 +64,7 @@ export default async ({ res, error }) => {
 
     return res.json(paymentLinksWithLineItems)
   } catch (err) {
-    error(err)
-    return res.json(
-      { ok: false, error: "Error fetching data from stripe" },
-      500
-    )
+    error(err.message)
+    return res.empty()
   }
 }
