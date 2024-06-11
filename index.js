@@ -52,7 +52,7 @@ export default async ({ res, log, error }) => {
       allPaymentLinks.map(async (link) => {
         const lineItems = await fetchLineItems(link.id)
         const productNames = lineItems.map(
-          (item) => item.price.product?.description || "Product not specified?"
+          (item) => item?.description || "Product not specified?"
         )
 
         return {
