@@ -50,12 +50,12 @@ export default async ({ res, error }) => {
     const paymentLinksWithLineItems = await Promise.all(
       allPaymentLinks.map(async (link) => {
         const lineItems = await fetchLineItems(link.id)
-        // const productNames = lineItems.map((item) => item.price.product.name)
+        const productNames = lineItems.map((item) => item.price.product.name)
 
         return {
           id: link.id,
           url: link.url,
-          lineItems,
+          names: productNames,
           created: link.created,
         }
       })
