@@ -64,6 +64,6 @@ export default async ({ res, error }) => {
     return res.json(paymentLinksWithLineItems)
   } catch (err) {
     error("Error fetching data from Stripe API:", err.message)
-    return res.status(500).json({ error: "Internal Server Error" })
+    return res.empty()
   }
 }
