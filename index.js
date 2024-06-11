@@ -1,6 +1,6 @@
 import Stripe from "stripe"
 
-export default async ({ res, log, error }) => {
+export default async ({ res, error }) => {
   const stripe = new Stripe(process.env.STRIPE_API_KEY)
 
   async function fetchPaymentLinks(pageParam = {}) {
@@ -8,33 +8,59 @@ export default async ({ res, log, error }) => {
     let hasMore = true
 
     while (hasMore) {
-      let response
       try {
-        response = await stripe.paymentLinks.list({
+        const response = await stripe.paymentLinks.list({
           limit: 100,
           starting_after: pageParam.startingAfter,
         })
+
+        paymentLinks = paymentLinks.concat(response.data)
+        hasMore = response.has_more
+
+        if (hasMore && response.data.length > 0) {
+          pageParam.startingAfter = response.data[response.data.length - 1].id
+        } else {
+          hasMore = false
+        }
       } catch (err) {
         throw new Error(`Error fetching data from Stripe API: ${err.message}`)
-      }
-
-      paymentLinks = paymentLinks.concat(response.data)
-      hasMore = response.has_more
-
-      if (hasMore && response.data.length > 0) {
-        pageParam.startingAfter = response.data[response.data.length - 1].id
-      } else {
-        hasMore = false
       }
     }
 
     return paymentLinks
   }
 
+  async function fetchLineItems(paymentLinkId) {
+    try {
+      const lineItems = await stripe.paymentLinks.listLineItems(paymentLinkId, {
+        limit: 100,
+      })
+      return lineItems.data
+    } catch (err) {
+      throw new Error(
+        `Error fetching line items for payment link ${paymentLinkId}: ${err.message}`
+      )
+    }
+  }
+
   try {
     const allPaymentLinks = await fetchPaymentLinks()
-    log(allPaymentLinks)
-    return res.json(allPaymentLinks)
+
+    const paymentLinksWithLineItems = await Promise.all(
+      allPaymentLinks.map(async (link) => {
+        const lineItems = await fetchLineItems(link.id)
+        const productNames = lineItems.map((item) => item.price.product.name)
+
+        return {
+          id: link.id,
+          url: link.url,
+          names: productNames,
+          created: link.created,
+        }
+      })
+    )
+
+    return res.json(paymentLinksWithLineItems)
   } catch (err) {
     error("Error fetching data from Stripe API:", err.message)
     return res.status(500).json({ error: "Internal Server Error" })
