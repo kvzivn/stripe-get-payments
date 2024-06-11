@@ -63,7 +63,10 @@ export default async ({ res, error }) => {
 
     return res.json(paymentLinksWithLineItems)
   } catch (err) {
-    error("Error fetching data from Stripe API:", err.message)
-    return res.empty()
+    error(err)
+    return res.json(
+      { ok: false, error: "Error fetching data from stripe" },
+      500
+    )
   }
 }
