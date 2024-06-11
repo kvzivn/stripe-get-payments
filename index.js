@@ -51,12 +51,17 @@ export default async ({ res, log, error }) => {
     const paymentLinksWithLineItems = await Promise.all(
       allPaymentLinks.map(async (link) => {
         const lineItems = await fetchLineItems(link.id)
-        const productNames = lineItems.map((item) => item.price.product.name)
+        const productNames = lineItems.map(
+          (item) => item.price.product?.description || "Product not specified?"
+        )
 
         return {
           id: link.id,
           url: link.url,
-          names: productNames,
+          name:
+            productNames.length > 0
+              ? productNames[0]
+              : "No product names available",
           created: link.created,
         }
       })
