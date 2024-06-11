@@ -35,6 +35,7 @@ export default async ({ res, error }) => {
       const lineItems = await stripe.paymentLinks.listLineItems(paymentLinkId, {
         limit: 100,
       })
+      log(lineItems)
       return lineItems.data
     } catch (err) {
       throw new Error(
@@ -49,12 +50,12 @@ export default async ({ res, error }) => {
     const paymentLinksWithLineItems = await Promise.all(
       allPaymentLinks.map(async (link) => {
         const lineItems = await fetchLineItems(link.id)
-        const productNames = lineItems.map((item) => item.price.product.name)
+        // const productNames = lineItems.map((item) => item.price.product.name)
 
         return {
           id: link.id,
           url: link.url,
-          names: productNames,
+          lineItems,
           created: link.created,
         }
       })
